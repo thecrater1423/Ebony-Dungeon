@@ -190,7 +190,6 @@ class Encounter:
         
 class Event:
     encounter=Encounter()
-    player=Player()
     def __init__(self,player):
         self.player=player
     def run(self):
