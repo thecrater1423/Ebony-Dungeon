@@ -1,6 +1,5 @@
 import random
 import time
-
 #Functions
 def printwithdelay(text,delay):
     print(text)
