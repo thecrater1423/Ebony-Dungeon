@@ -16,10 +16,10 @@ def checkDict(parameter,dict):
             return dict[slot],slot
     return None,None
 def appropriatearticle(word):
-    firstletter,_=word.lower().split(maxsplit=1)
+    letters=list(word.lower())
     article ="a"
     vowel=["a","e","i","o","u"]
-    if firstletter in vowel:
+    if letters[0] in vowel:
         article+="n"
     return article
 class Entity:
