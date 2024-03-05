@@ -15,7 +15,13 @@ def checkDict(parameter,dict):
         if dict[slot].name.lower()==parameter:
             return dict[slot],slot
     return None,None
-
+def appropriatearticle(word):
+    firstletter,_=word.lower().split(maxsplit=1)
+    article ="a"
+    vowel=["a","e","i","o","u"]
+    if firstletter in vowel:
+        article+="n"
+    return article
 class Entity:
     def takehit(self,dmg):
         self.health-=dmg
