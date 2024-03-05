@@ -138,8 +138,9 @@ class Player(Entity):
         if item is None:
             printwithdelay(f"{parameter} is not equipped.",.5)
             return
-        self.items.append(self.slots[slot])
+        self.items.append(item)
         self.slots[slot]=Items("Nothing","Nothing Equipped")
+        printwithdelay(f"You Unequipped your {item.name}",.3)
     def equipItem(self,parameter):
         item=checkList(parameter,self.items)
         if item is None:
