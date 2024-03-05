@@ -201,10 +201,12 @@ class EntranceEvent(Event):
         self.encounter.player.EnterRoom()
         
 class Enemy(Entity):
+    def __init__(self,name,damage,health):
+        self.damage=damage
+        self.health=health
+        self.name=name
     def spawn():
         print("")
-
-
         
 game=Game()
 game.openingsequence()
