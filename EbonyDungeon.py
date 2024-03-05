@@ -174,7 +174,7 @@ class Game:
         
 class Encounter:
     def EnterRoom(self,player):
-        rng=random.uniform(1.2**player.currentfloor-2*1.03**-x,1.2**player.currentfloor+2*1.03**-x)
+        rng=random.uniform(1.2**player.currentfloor-2*1.03**-player.currentfloor,1.2**player.currentfloor+2*1.03**-player.currentfloor)
         if rng<1:
             rng=1
         miniEncounterNumber=round(rng)
@@ -191,7 +191,7 @@ class Event:
 class EntranceEvent(Event):
     def run(self):
         self.player.currentfloor+=1
-        encounter.player.EnterRoom()
+        self.encounter.player.EnterRoom()
         
 class Enemy(Entity):
     def spawn():
