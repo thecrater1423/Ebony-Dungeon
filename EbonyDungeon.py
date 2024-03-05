@@ -76,7 +76,7 @@ class Player(Entity):
     items=[]
     money=0
     currentfloor=0
-    slots={"mainhand":Melee("Sledgehammer",10,"Quite heavy, but it can pack a punch."),
+    slots={"mainhand":Melee("Sledgehammer",10,"Quite heavy, but it can pack a punch.",0,1),
            "helmet":Helmet("Hardhat",2,"Unless you are dueling a bunch of falling rocks, this might not do much."),
            "chestplate":Chestplate("Reflective Vest",1,"Unless you are battling drunk drivers this may not do much."),
            "pants":Pants("Work Pants",1,"Unless you are attempting to look the least flattering, this may not do much."),
@@ -84,11 +84,12 @@ class Player(Entity):
     def die(self):
         quit()
     def choose(self,options):
+        inventorysynonyms=["items","item","inventory"]
         choice=input("Actions >")
         if choice.lower()=="stats":
             printwithdelay(f"Health> {self.health}\nMax Health> {self.maxhealth}\nMoney> {self.money}\nCurrent Floor> {self.currentfloor}",.5)
             self.choose(options)
-        elif choice.lower()=="items":
+        elif choice.lower()in inventorysynonyms:
             printwithdelay("Items:",.2)
             for item in self.items:
                 printwithdelay(item.name,.2)
