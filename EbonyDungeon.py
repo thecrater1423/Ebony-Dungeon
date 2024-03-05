@@ -153,13 +153,12 @@ class Player(Entity):
             self.items.append(self.slots[item.slot])
         self.slots[item.slot]=item
         self.items.remove(item)
+        article=appropriatearticle(item.name)
+        printwithdelay(f"You Equipped {article} {item.name}!",.3)
+
     def pickup(self,item):
         self.items.append(item)
-        firstletter,_=item.name.lower().split(maxsplit=1)
-        article ="a"
-        vowel=["a","e","i","o","u"]
-        if firstletter in vowel:
-            article+="n"
+        article=appropriatearticle(item.name)
         printwithdelay(f"You Picked up {article} {item.name}!",.3)
     def pickupList(self,items):
         for item in items:
