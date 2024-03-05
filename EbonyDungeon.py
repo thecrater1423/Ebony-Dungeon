@@ -37,14 +37,16 @@ class Items:
         printwithdelay("This item has no attributes",.5)
     slot=None
 class Mainhand(Items):
-    def printAttributes(self):
-        printwithdelay(f"Mainhand\nDamage> {self.damage}\n{self.tooltip}",.5)
     slot="mainhand"
 class Melee(Mainhand):
-    def __init__(self,name,damage,tooltip):
+    def __init__(self,name,damage,tooltip,critpower,critchance):
         self.damage=damage
         self.name=name
         self.tooltip=tooltip
+        self.critpower=critpower
+        self.critchance=critchance
+    def printAttributes(self):
+        printwithdelay(f"Mainhand\nDamage> {self.damage}\nCrit Power> {self.critpower}\nCrit Chance> {self.critchance}\n{self.tooltip}",.5)
 class Armor(Items):
     def __init__(self,name,defense,tooltip):
         self.defense=defense
