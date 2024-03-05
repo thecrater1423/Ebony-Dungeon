@@ -175,19 +175,37 @@ class Game:
         self.__entrance()
     def __entrance(self):
         printwithdelay("You stand at the entrance to a deep dungeon",.5)
-        self.player.pickupList([Melee("Gold Broadsword",17,f"It may be fancy, but it gets the job done."),Melee("DIAMOND BROADSWORD",25,f"It may be super fucking cool, but it deserves to be praised.")])
+        self.player.pickupList([Melee("Gold Broadsword",17,f"It may be fancy, but it gets the job done.",.35,1.15),
+                                Melee("DIAMOND BROADSWORD",25,f"It may be super fucking cool, but it deserves to be praised.",.05,2)])
         entranceEvent=EntranceEvent(self.player)
         options={"enter":entranceEvent,"go":entranceEvent,"proceed":entranceEvent}
         self.player.choose(options)
         
 class Encounter:
-    def EnterRoom(self,player):
+    def encounterNumber(self,player):
         rng=random.uniform(1.2**player.currentfloor-2*1.03**-player.currentfloor,1.2**player.currentfloor+2*1.03**-player.currentfloor)
         if rng<1:
             rng=1
         miniEncounterNumber=round(rng)
-    def miniEncounter(self,player):
-        print("")
+    def createMeleMonster(self,player):
+        attributes={"Strong":{"strength":2,"vigor":1.25,"Intellect":1,"Decisiveness":1},
+                    "Puny":{"strength":.5,"vigor":.75,"Intellect":1,"Decisiveness":1},
+                    "Bulky":{"strength":1,"vigor":1.5,"Intellect":1,"Decisiveness":1},
+                    "Large":{"strength":1,"vigor":2.25,"Intellect":1,"Decisiveness":1},
+                    "Gargantuan":{"strength":1,"vigor":3,"Intellect":1,"Decisiveness":1},
+                    "Skillful":{"strength":1,"vigor":1,"Intellect":1.5,"Decisiveness":2.5},
+                    "Wise":{"strength":1,"vigor":1,"Intellect":2.5,"Decisiveness":1.5},
+                    "Foolish":{"strength":1,"vigor":1,"Intellect":.5,"Decisiveness":.75},
+                    "Gruntish":{"strength":1.5,"vigor":2,"Intellect":.5,"Decisiveness":.5}}
+        attribute,stats=random.choice(list(attributes))
+        monsters=["Goblin","Zombie","Ninja","Pirate","Henchman"]
+        weapons=["Sword","Scimitar","Waraxe","Shortsword","Longsword"]
+        monsterName=attribute+" " +random.choice(monsters)
+        monsterWeaponName=monsterName+"'s "+random.choice(weapons)
+        damage=stats["strength"]*1.2**player.currentfloor
+        defense=stats["vigor"]*1/2*1.2**player.currentfloor
+
+        
         
 class Event:
     encounter=Encounter()
@@ -198,15 +216,24 @@ class Event:
 class EntranceEvent(Event):
     def run(self):
         self.player.currentfloor+=1
-        self.encounter.player.EnterRoom()
+        printwithdelay(f"You have entered floor {self.player.currentfloor}")
         
 class Enemy(Entity):
-    def __init__(self,name,damage,health):
-        self.damage=damage
+    def __init__(self,name,health,maxhealth,weapon,helmet,chestplate,pants,boots):
         self.health=health
+        self.maxhealth=maxhealth
         self.name=name
-    def spawn():
-        print("")
+        self.weapon=weapon
+        self.helmet=helmet
+        self.chestplate=chestplate
+        self.pants=pants
+        self.boots=boots
+    def defense(self):
+        defense=self.helmet.defense+self.chestplate.defense+self.pants.defense+self.boots.defense
+        return defense
+    def spawn(self):
+        self.spawn()
+        self.die()
         
 game=Game()
 game.openingsequence()
