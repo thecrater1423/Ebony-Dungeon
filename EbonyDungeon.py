@@ -191,7 +191,8 @@ class Encounter:
         if rng<1:
             rng=1
         miniEncounterNumber=round(rng)
-    def createMeleMonster(self,player):
+        return miniEncounterNumber
+    def createMeleeMonster(self,player):
         attributes={"Strong":{"strength":2,"vigor":1.25,"Intellect":1,"Decisiveness":1},
                     "Puny":{"strength":.5,"vigor":.75,"Intellect":1,"Decisiveness":1},
                     "Bulky":{"strength":1,"vigor":1.5,"Intellect":1,"Decisiveness":1},
@@ -200,14 +201,34 @@ class Encounter:
                     "Skillful":{"strength":1,"vigor":1,"Intellect":1.5,"Decisiveness":2.5},
                     "Wise":{"strength":1,"vigor":1,"Intellect":2.5,"Decisiveness":1.5},
                     "Foolish":{"strength":1,"vigor":1,"Intellect":.5,"Decisiveness":.75},
-                    "Gruntish":{"strength":1.5,"vigor":2,"Intellect":.5,"Decisiveness":.5}}
+                    "Gruntish":{"strength":1.5,"vigor":2,"Intellect":.5,"Decisiveness":.5},
+                    "Average":{"strength":1,"vigor":1,"Intellect":1,"Decisiveness":1}}
         attribute,stats=random.choice(list(attributes))
         monsters=["Goblin","Zombie","Ninja","Pirate","Henchman"]
-        weapons=["Sword","Scimitar","Waraxe","Shortsword","Longsword"]
+        items={"weapons":["Sword","Scimitar","Waraxe","Shortsword","Longsword"],
+               "helmets":["Greathelm","Helmet","Viking Helmet","Knight Helmet","Visor"],
+               "chestplates":["Breastplate","Chestplate","Vest","Overarmor"],
+               "pants":["Pantaloons","Knight Leggings"],
+               "boots":["Combat Boots","Leather Boots"]}
         monsterName=attribute+" " +random.choice(monsters)
-        monsterWeaponName=monsterName+"'s "+random.choice(weapons)
-        damage=stats["strength"]*1.2**player.currentfloor
-        defense=stats["vigor"]*1/2*1.2**player.currentfloor
+        monsterWeaponName=monsterName+"'s "+random.choice(items["weapons"])
+        monsterHelmetName=monsterName+"'s "+random.choice(items["helmets"])
+        monsterChestplateName=monsterName+"'s "+random.choice(items["chestplates"])
+        monsterPantsName=monsterName+"'s "+random.choice(items["pants"])
+        monsterBootsName=monsterName+"'s "+random.choice(items["boots"])
+        monsterItemTooltip=f"This once belonged to a {monsterName}"
+        damage=round(stats["strength"]*1.2**player.currentfloor)
+        defense=round(stats["vigor"]*1.2**player.currentfloor)
+        health=round(stats["vigor"]*100*1.2**player.currentfloor)
+        critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor,2)
+        critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1,2)
+        monster=Enemy(monsterName,health,
+                      Melee(monsterWeaponName,damage,monsterItemTooltip,critchance,critpower),
+                      Helmet(monsterHelmetName,defense,monsterItemTooltip),
+                      Chestplate(monsterChestplateName,defense,monsterItemTooltip),
+                      Pants(monsterPantsName,defense,monsterItemTooltip),
+                      Boot(monsterBootsName,defense,monsterItemTooltip))
+        return monster
 
         
         
@@ -223,9 +244,9 @@ class EntranceEvent(Event):
         printwithdelay(f"You have entered floor {self.player.currentfloor}")
         
 class Enemy(Entity):
-    def __init__(self,name,health,maxhealth,weapon,helmet,chestplate,pants,boots):
+    def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
         self.health=health
-        self.maxhealth=maxhealth
+        self.maxhealth=health
         self.name=name
         self.weapon=weapon
         self.helmet=helmet
