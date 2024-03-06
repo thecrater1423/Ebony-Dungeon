@@ -26,6 +26,10 @@ class Entity:
         self.health-=dmg
         if self.health<0:
             self.die()
+    def heal(self,health):
+        self.health+=health
+        if self.health>self.maxhealth:
+            self.health=self.maxhealth
     def die(self):
         print("die")
         
