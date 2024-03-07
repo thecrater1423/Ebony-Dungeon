@@ -239,7 +239,7 @@ class Encounter:
     def beginEncounter(self):
         currentMonster=self.createMeleeMonster(self.player)
         printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!",.3)
-        options={"attack":AttackEvent(self.player),"hit":AttackEvent(self.player)}
+        options={"attack":AttackEvent(self.player,currentMonster),"hit":AttackEvent(self.player,currentMonster)}
         self.player.choose(options)
 class Event:
     def __init__(self,player):
@@ -260,8 +260,16 @@ class EntranceEvent(Event):
         currentEncounter=Encounter(miniEncounterNumber,self.player)
         currentEncounter.beginEncounter()
 class AttackEvent(Event):
+    def __init__(self,player,monster):
+        self.player=player
+        self.monster=monster
     def run(self):
-        print("haha")
+        rng=random.uniform(0,1)
+        if rng<=self.player.mainhand.critchance:
+            self.monster.takehit(self.player.mainhand.damage*self.player.mainhand.critpower)
+            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {self.player.mainhand.damage*self.player.mainhand.critpower} damage!")
+        self.monster.takehit(self.player.mainhand.damage)
+        printwithdelay(f"You attacked on the {self.monster.name} dealing {self.player.mainhand.damage} damage!")
 class Enemy(Entity):
     def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
         self.health=health
@@ -278,6 +286,8 @@ class Enemy(Entity):
     def spawn(self):
         self.spawn()
         self.die()
+    def die(self):
+        print("die")
         
 game=Game()
 game.openingsequence()
