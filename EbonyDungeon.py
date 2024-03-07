@@ -238,13 +238,9 @@ class Encounter:
         return monster
     def beginEncounter(self):
         currentMonster=self.createMeleeMonster(self.player)
-        printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!",3)
-        print(currentMonster.weapon.name+currentMonster.helmet.name+str(currentMonster.weapon.damage))
-
-
-
-        
-        
+        printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!",.3)
+        options={"attack":AttackEvent(self.player),"hit":AttackEvent(self.player)}
+        self.player.choose(options)
 class Event:
     def __init__(self,player):
         self.player=player
@@ -263,7 +259,9 @@ class EntranceEvent(Event):
         miniEncounterNumber=self.encounterNumber(self.player)
         currentEncounter=Encounter(miniEncounterNumber,self.player)
         currentEncounter.beginEncounter()
-        
+class AttackEvent(Event):
+    def run(self):
+        print("haha")
 class Enemy(Entity):
     def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
         self.health=health
