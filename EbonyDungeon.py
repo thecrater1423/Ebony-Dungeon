@@ -101,8 +101,8 @@ class Player(Entity):
             self.InventoryMenu()
             self.choose(options)
         elif choice.lower() in options:
-            event=options [choice]
-            event.run(self)
+            event=options[choice.lower()]
+            event.run()
         else:
             printwithdelay(f"{choice} is not a valid action",.5)
             self.choose(options)
@@ -110,24 +110,34 @@ class Player(Entity):
         choice=input("Inventory >")
         if choice.lower()=="back":
             return
-        command,parameter=choice.lower().split(' ',1)
-        if command=="equip":
-            self.equipItem(parameter)
-        elif command=="unequip":
-            self.unequipItem(parameter)
-        elif command=="use":
-            print("")
-        elif command=="inspect":
-            self.inspectItem(parameter)
-        else:
-            printwithdelay(f"{command} is not a valid action",.5)
+        try:
+            command,parameter=choice.lower().split(' ',1)
+        except ValueError:
+            if choice.lower not in ["equip","unequip","use","inspect"]:
+                printwithdelay(f"{choice} is not a valid action",.5)
+                self.InventoryMenu()
+            printwithdelay(f"Incorrect Usage, Try:{choice} [item]",.5)
             self.InventoryMenu()
+            command,parameter=choice.lower().split(' ',1)
+        else:
+            if command=="equip":
+                self.equipItem(parameter)
+            elif command=="unequip":
+                self.unequipItem(parameter)
+            elif command=="use":
+                print("")
+            elif command=="inspect":
+                self.inspectItem(parameter)
+            else:
+                printwithdelay(f"{command} is not a valid action",.5)
+                self.InventoryMenu()
+        
     def inspectItem(self,parameter):
         item=checkList(parameter,self.items)
         if item is not None:
             item.printAttributes()
             return
-        item,slot=checkDict(parameter,self.slots)
+        item,_=checkDict(parameter,self.slots)
         if item.name == "Nothing":
             printwithdelay(f"You stare into space for several moments contemplating nothing",.5)
             return            
@@ -181,17 +191,13 @@ class Game:
         printwithdelay("You stand at the entrance to a deep dungeon",.5)
         self.player.pickupList([Melee("Gold Broadsword",17,f"It may be fancy, but it gets the job done.",.35,1.15),
                                 Melee("DIAMOND BROADSWORD",25,f"It may be super fucking cool, but it deserves to be praised.",.05,2)])
-        entranceEvent=EntranceEvent(self.player)
-        options={"enter":entranceEvent,"go":entranceEvent,"proceed":entranceEvent}
+        options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
         self.player.choose(options)
         
 class Encounter:
-    def encounterNumber(self,player):
-        rng=random.uniform(1.2**player.currentfloor-2*1.03**-player.currentfloor,1.2**player.currentfloor+2*1.03**-player.currentfloor)
-        if rng<1:
-            rng=1
-        miniEncounterNumber=round(rng)
-        return miniEncounterNumber
+    def __init__(self,randomencounternumber,player):
+        self.randomEncounterNumber=randomencounternumber
+        self.player=player
     def createMeleeMonster(self,player):
         attributes={"Strong":{"strength":2,"vigor":1.25,"Intellect":1,"Decisiveness":1},
                     "Puny":{"strength":.5,"vigor":.75,"Intellect":1,"Decisiveness":1},
@@ -203,7 +209,7 @@ class Encounter:
                     "Foolish":{"strength":1,"vigor":1,"Intellect":.5,"Decisiveness":.75},
                     "Gruntish":{"strength":1.5,"vigor":2,"Intellect":.5,"Decisiveness":.5},
                     "Average":{"strength":1,"vigor":1,"Intellect":1,"Decisiveness":1}}
-        attribute,stats=random.choice(list(attributes))
+        attribute,stats=random.choice(list(attributes.items()))
         monsters=["Goblin","Zombie","Ninja","Pirate","Henchman"]
         items={"weapons":["Sword","Scimitar","Waraxe","Shortsword","Longsword"],
                "helmets":["Greathelm","Helmet","Viking Helmet","Knight Helmet","Visor"],
@@ -211,17 +217,18 @@ class Encounter:
                "pants":["Pantaloons","Knight Leggings"],
                "boots":["Combat Boots","Leather Boots"]}
         monsterName=attribute+" " +random.choice(monsters)
+        randomoffset=random.uniform(-1,1)
         monsterWeaponName=monsterName+"'s "+random.choice(items["weapons"])
         monsterHelmetName=monsterName+"'s "+random.choice(items["helmets"])
         monsterChestplateName=monsterName+"'s "+random.choice(items["chestplates"])
         monsterPantsName=monsterName+"'s "+random.choice(items["pants"])
         monsterBootsName=monsterName+"'s "+random.choice(items["boots"])
         monsterItemTooltip=f"This once belonged to a {monsterName}"
-        damage=round(stats["strength"]*1.2**player.currentfloor)
-        defense=round(stats["vigor"]*1.2**player.currentfloor)
-        health=round(stats["vigor"]*100*1.2**player.currentfloor)
-        critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor,2)
-        critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1,2)
+        damage=round(stats["strength"]*7*1.2**player.currentfloor+2*randomoffset)
+        defense=round(stats["vigor"]*1.2**player.currentfloor+2*randomoffset)
+        health=round(stats["vigor"]*100*1.2**player.currentfloor+5*round(randomoffset))
+        critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
+        critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
         monster=Enemy(monsterName,health,
                       Melee(monsterWeaponName,damage,monsterItemTooltip,critchance,critpower),
                       Helmet(monsterHelmetName,defense,monsterItemTooltip),
@@ -229,19 +236,33 @@ class Encounter:
                       Pants(monsterPantsName,defense,monsterItemTooltip),
                       Boot(monsterBootsName,defense,monsterItemTooltip))
         return monster
+    def beginEncounter(self):
+        currentMonster=self.createMeleeMonster(self.player)
+        printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!",3)
+        print(currentMonster.weapon.name+currentMonster.helmet.name+str(currentMonster.weapon.damage))
+
+
 
         
         
 class Event:
-    encounter=Encounter()
     def __init__(self,player):
         self.player=player
+    def encounterNumber(self,player):
+        rng=random.uniform(1.2**player.currentfloor-2*1.03**-player.currentfloor,1.2**player.currentfloor+2*1.03**-player.currentfloor)
+        if rng<1:
+            rng=1
+        miniEncounterNumber=round(rng)
+        return miniEncounterNumber
     def run(self):
         return
 class EntranceEvent(Event):
     def run(self):
         self.player.currentfloor+=1
-        printwithdelay(f"You have entered floor {self.player.currentfloor}")
+        printwithdelay(f"You have entered floor {self.player.currentfloor}",.3)
+        miniEncounterNumber=self.encounterNumber(self.player)
+        currentEncounter=Encounter(miniEncounterNumber,self.player)
+        currentEncounter.beginEncounter()
         
 class Enemy(Entity):
     def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
