@@ -80,7 +80,7 @@ class Player(Entity):
     items=[]
     money=0
     currentfloor=0
-    slots={"mainhand":Melee("Sledgehammer",10,"Quite heavy, but it can pack a punch.",0,1),
+    slots={"mainhand":Melee("Sledgehammer",10,"Quite heavy, but it can pack a punch.",3,.5),
            "helmet":Helmet("Hardhat",2,"Unless you are dueling a bunch of falling rocks, this might not do much."),
            "chestplate":Chestplate("Reflective Vest",1,"Unless you are battling drunk drivers this may not do much."),
            "pants":Pants("Work Pants",1,"Unless you are attempting to look the least flattering, this may not do much."),
@@ -189,8 +189,8 @@ class Game:
         self.__entrance()
     def __entrance(self):
         printwithdelay("You stand at the entrance to a deep dungeon",.5)
-        self.player.pickupList([Melee("Gold Broadsword",17,f"It may be fancy, but it gets the job done.",.35,1.15),
-                                Melee("DIAMOND BROADSWORD",25,f"It may be super fucking cool, but it deserves to be praised.",.05,2)])
+        self.player.pickupList([Melee("Gold Broadsword",17,f"It may be fancy, but it gets the job done.",1.15,.35),
+                                Melee("DIAMOND BROADSWORD",25,f"It may be super fucking cool, but it deserves to be praised.",2,.05)])
         options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
         self.player.choose(options)
         
@@ -224,9 +224,9 @@ class Encounter:
         monsterPantsName=monsterName+"'s "+random.choice(items["pants"])
         monsterBootsName=monsterName+"'s "+random.choice(items["boots"])
         monsterItemTooltip=f"This once belonged to a {monsterName}"
-        damage=round(stats["strength"]*7*1.2**player.currentfloor+2*randomoffset)
+        damage=round(stats["strength"]*11*1.2**player.currentfloor+2*randomoffset)
         defense=round(stats["vigor"]*1.2**player.currentfloor+2*randomoffset)
-        health=round(stats["vigor"]*100*1.2**player.currentfloor+5*round(randomoffset))
+        health=round(stats["vigor"]*50*1.2**player.currentfloor+5*round(randomoffset))
         critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
         critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
         monster=Enemy(monsterName,health,
@@ -265,11 +265,17 @@ class AttackEvent(Event):
         self.monster=monster
     def run(self):
         rng=random.uniform(0,1)
-        if rng<=self.player.mainhand.critchance:
-            self.monster.takehit(self.player.mainhand.damage*self.player.mainhand.critpower)
-            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {self.player.mainhand.damage*self.player.mainhand.critpower} damage!")
-        self.monster.takehit(self.player.mainhand.damage)
-        printwithdelay(f"You attacked on the {self.monster.name} dealing {self.player.mainhand.damage} damage!")
+        dmg=round(self.player.slots["mainhand"].damage-self.monster.defense())
+        if dmg<1:
+            dmg=1
+        critdmg=round((self.player.slots["mainhand"].damage*self.player.slots["mainhand"].critpower)-self.monster.defense())
+        if critdmg<1:
+            critdmg=1
+        if rng<=self.player.slots["mainhand"].critchance:
+            self.monster.takehit(critdmg)
+            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage!",.3)
+        self.monster.takehit(dmg)
+        printwithdelay(f"You attacked on the {self.monster.name} dealing {dmg} damage!",.3)
 class Enemy(Entity):
     def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
         self.health=health
