@@ -24,7 +24,7 @@ def appropriatearticle(word):
 class Entity:
     def takehit(self,dmg):
         self.health-=dmg
-        if self.health<0:
+        if self.health<=0:
             self.die()
     def heal(self,health):
         self.health+=health
@@ -141,25 +141,31 @@ class Player(Entity):
             item.printAttributes()
             return
         item,_=checkDict(parameter,self.slots)
-        if item.name == "Nothing":
-            printwithdelay(f"You stare into space for several moments contemplating nothing",.5)
-            return            
-        if item is not None:
-            item.printAttributes()
-        else:
-            printwithdelay(f"{parameter} is not a valid item",.5)
-            return
+        try:
+            if item.name == "Nothing":
+                printwithdelay(f"You stare into space for several moments contemplating nothing",.5)
+                return
+        finally:
+            if item is not None:
+                item.printAttributes()
+                return
+            else:
+                printwithdelay(f"{parameter} is not a valid item",.5)
+                return
+        
     def unequipItem(self,parameter):
         item,slot=checkDict(parameter,self.slots)
-        if item.name == "Nothing":
-            printwithdelay(f"{parameter} is not a valid item.",.5)
-            return
-        if item is None:
-            printwithdelay(f"{parameter} is not equipped.",.5)
-            return
-        self.items.append(item)
-        self.slots[slot]=Items("Nothing","Nothing Equipped")
-        printwithdelay(f"You Unequipped your {item.name}",.3)
+        try:
+            if item.name == "Nothing":
+                printwithdelay(f"{parameter} is not a valid item.",.5)
+                return
+        finally:
+            if item is None:
+                printwithdelay(f"{parameter} is not equipped.",.5)
+                return
+            self.items.append(item)
+            self.slots[slot]=Items("Nothing","Nothing Equipped")
+            printwithdelay(f"You Unequipped your {item.name}",.3)
     def equipItem(self,parameter):
         item=checkList(parameter,self.items)
         if item is None:
@@ -261,6 +267,21 @@ class Encounter:
         self.player.takehit(dmg)
         options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
         self.player.choose(options)
+    def monsterItems(self,monster):
+        rng=random.uniform(0,1)
+        if rng>.5:
+            return
+        items=[monster.weapon,monster.helmet,monster.chestplate,monster.pants,monster.boots]
+        reward=random.choice(items)
+        self.player.pickup(reward)
+    def monsterDeath(self,monster):
+        printwithdelay(f"You have successfully slain the {monster.name}!",.3)
+        self.randomEncounterNumber-=1
+        self.monsterItems(monster)
+        printwithdelay("You come to find a door before you.",.3)
+        options={"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber),"enter":EnterRoom(self.player,self.randomEncounterNumber)}
+        self.player.choose(options)
+            
 class Event:
     def __init__(self,player):
         self.player=player
@@ -279,6 +300,18 @@ class EntranceEvent(Event):
         self.miniEncounterNumber=self.encounterNumber(self.player)
         self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
         self.currentEncounter.beginEncounter(self.currentEncounter)
+class EnterRoom(Event):
+    def __init__(self,player,miniEncouterNumber):
+        self.player=player
+        self.miniEncounterNumber=miniEncouterNumber
+    def run(self):
+        if self.miniEncounterNumber==0:
+            printwithdelay("Before you is a staircase that decends deeper into the dungeon.",.3)
+            options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
+            self.player.choose(options)
+        self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
+        self.currentEncounter.beginEncounter(self.currentEncounter)
+        
 class AttackEvent(Event):
     def __init__(self,player,monster,currentEncounter):
         self.player=player
@@ -293,11 +326,13 @@ class AttackEvent(Event):
         if critdmg<1:
             critdmg=1
         if rng<=self.player.slots["mainhand"].critchance:
-            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)
-            self.monster.takehit(critdmg)
+            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage!",.3)
+            self.monster.takehit(critdmg,self.currentEncounter)
+            printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})",.3)
             self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
-        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)    
-        self.monster.takehit(dmg)
+        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage!",.3)    
+        self.monster.takehit(dmg,self.currentEncounter)
+        printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})",.3)
         self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
         
 
@@ -314,11 +349,10 @@ class Enemy(Entity):
     def defense(self):
         defense=self.helmet.defense+self.chestplate.defense+self.pants.defense+self.boots.defense
         return defense
-    def spawn(self):
-        self.spawn()
-        self.die()
-    def die(self):
-        print("die")
+    def takehit(self,dmg,encounter):
+        self.health-=dmg
+        if self.health<=0:
+            encounter.monsterDeath(self)
         
 game=Game()
 game.openingsequence()
