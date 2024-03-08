@@ -85,6 +85,9 @@ class Player(Entity):
            "chestplate":Chestplate("Reflective Vest",1,"Unless you are battling drunk drivers this may not do much."),
            "pants":Pants("Work Pants",1,"Unless you are attempting to look the least flattering, this may not do much."),
            "boots":Boot("Nike Kicks",50,"Strangely very protective, must be the fact that they aren't creased.")}
+    def defense(self):
+        defense=self.slots["helmet"].defense+self.slots["chestplate"].defense+self.slots["pants"].defense+self.slots["boots"].defense
+        return defense
     def die(self):
         quit()
     def choose(self,options):
@@ -230,16 +233,33 @@ class Encounter:
         critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
         critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
         monster=Enemy(monsterName,health,
-                      Melee(monsterWeaponName,damage,monsterItemTooltip,critchance,critpower),
+                      Melee(monsterWeaponName,damage,monsterItemTooltip,critpower,critchance),
                       Helmet(monsterHelmetName,defense,monsterItemTooltip),
                       Chestplate(monsterChestplateName,defense,monsterItemTooltip),
                       Pants(monsterPantsName,defense,monsterItemTooltip),
                       Boot(monsterBootsName,defense,monsterItemTooltip))
         return monster
-    def beginEncounter(self):
+    def beginEncounter(self,currentEncounter):
         currentMonster=self.createMeleeMonster(self.player)
         printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!",.3)
-        options={"attack":AttackEvent(self.player,currentMonster),"hit":AttackEvent(self.player,currentMonster)}
+        options={"attack":AttackEvent(self.player,currentMonster,currentEncounter),"hit":AttackEvent(self.player,currentMonster,currentEncounter)}
+        self.player.choose(options)
+    def enemyRetalite(self,monster,currentEncounter):
+        rng=random.uniform(0,1)
+        dmg=round(monster.weapon.damage-self.player.defense())
+        if dmg<1:
+            dmg=1
+        critdmg=round((monster.weapon.damage*monster.weapon.critpower)-self.player.defense())
+        if critdmg<1:
+            critdmg=1
+        if rng<=monster.weapon.critchance:
+            self.player.takehit(critdmg)
+            printwithdelay(f"The {monster.name} performed a crit on you dealing {critdmg} damage!",.3)
+            options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
+            self.player.choose(options)
+        self.player.takehit(dmg)
+        printwithdelay(f"The {monster.name} attacked you dealing {dmg} damage!",.3)
+        options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
         self.player.choose(options)
 class Event:
     def __init__(self,player):
@@ -256,13 +276,14 @@ class EntranceEvent(Event):
     def run(self):
         self.player.currentfloor+=1
         printwithdelay(f"You have entered floor {self.player.currentfloor}",.3)
-        miniEncounterNumber=self.encounterNumber(self.player)
-        currentEncounter=Encounter(miniEncounterNumber,self.player)
-        currentEncounter.beginEncounter()
+        self.miniEncounterNumber=self.encounterNumber(self.player)
+        self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
+        self.currentEncounter.beginEncounter(self.currentEncounter)
 class AttackEvent(Event):
-    def __init__(self,player,monster):
+    def __init__(self,player,monster,currentEncounter):
         self.player=player
         self.monster=monster
+        self.currentEncounter=currentEncounter
     def run(self):
         rng=random.uniform(0,1)
         dmg=round(self.player.slots["mainhand"].damage-self.monster.defense())
@@ -273,9 +294,13 @@ class AttackEvent(Event):
             critdmg=1
         if rng<=self.player.slots["mainhand"].critchance:
             self.monster.takehit(critdmg)
-            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage!",.3)
+            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)
+            self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
         self.monster.takehit(dmg)
-        printwithdelay(f"You attacked on the {self.monster.name} dealing {dmg} damage!",.3)
+        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)
+        self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
+        
+
 class Enemy(Entity):
     def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
         self.health=health
