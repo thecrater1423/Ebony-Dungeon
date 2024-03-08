@@ -1,7 +1,8 @@
 import random
 import time
 #Functions
-def printwithdelay(text,delay):
+def printwithdelay(text):
+    delay=.1
     print(text)
     time.sleep(delay)
 def checkList(parameter,list):
@@ -38,7 +39,7 @@ class Items:
         self.tooltip=tooltip
         self.name=name
     def printAttributes(self):
-        printwithdelay("This item has no attributes",.5)
+        printwithdelay("This item has no attributes")
     slot=None
 class Mainhand(Items):
     slot="mainhand"
@@ -50,29 +51,29 @@ class Melee(Mainhand):
         self.critpower=critpower
         self.critchance=critchance
     def printAttributes(self):
-        printwithdelay(f"Mainhand\nDamage> {self.damage}\nCrit Power> {self.critpower}\nCrit Chance> {self.critchance}\n{self.tooltip}",.5)
+        printwithdelay(f"Mainhand\nDamage> {self.damage}\nCrit Power> {self.critpower}\nCrit Chance> {self.critchance}\n{self.tooltip}")
 class Armor(Items):
     def __init__(self,name,defense,tooltip):
         self.defense=defense
         self.name=name
         self.tooltip=tooltip
     def printAttributes(self):
-        printwithdelay(f"Defense> {self.defense}\n{self.tooltip}",.5)
+        printwithdelay(f"Defense> {self.defense}\n{self.tooltip}")
 class Helmet(Armor):
     def printAttributes(self):
-        printwithdelay(f"Helmet\nDefense> {self.defense}\n{self.tooltip}",.5)
+        printwithdelay(f"Helmet\nDefense> {self.defense}\n{self.tooltip}")
     slot="helmet"
 class Chestplate(Armor):
     def printAttributes(self):
-        printwithdelay(f"Chestplate\nDefense> {self.defense}\n{self.tooltip}",.5)
+        printwithdelay(f"Chestplate\nDefense> {self.defense}\n{self.tooltip}")
     slot="chestplate"
 class Pants(Armor):
     def printAttributes(self):
-        printwithdelay(f"Pants\nDefense> {self.defense}\n{self.tooltip}",.5)
+        printwithdelay(f"Pants\nDefense> {self.defense}\n{self.tooltip}")
     slot="pants"
 class Boot(Armor):
     def printAttributes(self):
-        printwithdelay(f"Boots\nDefense> {self.defense}\n{self.tooltip}",.5)
+        printwithdelay(f"Boots\nDefense> {self.defense}\n{self.tooltip}")
     slot="boots"
 class Player(Entity):
     health=100
@@ -80,34 +81,35 @@ class Player(Entity):
     items=[]
     money=0
     currentfloor=0
-    slots={"mainhand":Melee("Sledgehammer",10,"Quite heavy, but it can pack a punch.",3,.5),
-           "helmet":Helmet("Hardhat",2,"Unless you are dueling a bunch of falling rocks, this might not do much."),
-           "chestplate":Chestplate("Reflective Vest",1,"Unless you are battling drunk drivers this may not do much."),
-           "pants":Pants("Work Pants",1,"Unless you are attempting to look the least flattering, this may not do much."),
-           "boots":Boot("Nike Kicks",50,"Strangely very protective, must be the fact that they aren't creased.")}
+    slots={"mainhand":Melee("Sledgehammer",25,"Quite heavy, but it can pack a punch.",2.5,.07),
+           "helmet":Helmet("Hardhat",3,"Unless you are dueling a bunch of falling rocks, this might not do much."),
+           "chestplate":Chestplate("Reflective Vest",2,"Unless you are battling drunk drivers this may not do much."),
+           "pants":Pants("Work Pants",2,"Unless you are attempting to look the least flattering, this may not do much."),
+           "boots":Boot("Nike Kicks",1,"A lot more stylish than they are protective.")}
     def defense(self):
         defense=self.slots["helmet"].defense+self.slots["chestplate"].defense+self.slots["pants"].defense+self.slots["boots"].defense
         return defense
     def die(self):
+        printwithdelay
         quit()
     def choose(self,options):
         inventorysynonyms=["items","item","inventory"]
         choice=input("Actions >")
         if choice.lower()=="stats":
-            printwithdelay(f"Health> {self.health}\nMax Health> {self.maxhealth}\nMoney> {self.money}\nCurrent Floor> {self.currentfloor}",.5)
+            printwithdelay(f"Health> {self.health}\nMax Health> {self.maxhealth}\nMoney> {self.money}\nCurrent Floor> {self.currentfloor}")
             self.choose(options)
         elif choice.lower()in inventorysynonyms:
-            printwithdelay("Items:",.2)
+            printwithdelay("Items:")
             for item in self.items:
-                printwithdelay(item.name,.2)
-            printwithdelay(f"Equipped:\nMainhand> {self.slots['mainhand'].name}\nHelmet> {self.slots['helmet'].name}\nChestplate> {self.slots['chestplate'].name}\nPants> {self.slots['pants'].name}\nBoots> {self.slots['boots'].name}",.2)
+                printwithdelay(item.name)
+            printwithdelay(f"Equipped:\nMainhand> {self.slots['mainhand'].name}\nHelmet> {self.slots['helmet'].name}\nChestplate> {self.slots['chestplate'].name}\nPants> {self.slots['pants'].name}\nBoots> {self.slots['boots'].name}")
             self.InventoryMenu()
             self.choose(options)
         elif choice.lower() in options:
             event=options[choice.lower()]
             event.run()
         else:
-            printwithdelay(f"{choice} is not a valid action",.5)
+            printwithdelay(f"{choice} is not a valid action")
             self.choose(options)
     def InventoryMenu(self):
         choice=input("Inventory >")
@@ -117,9 +119,9 @@ class Player(Entity):
             command,parameter=choice.lower().split(' ',1)
         except ValueError:
             if choice.lower not in ["equip","unequip","use","inspect"]:
-                printwithdelay(f"{choice} is not a valid action",.5)
+                printwithdelay(f"{choice} is not a valid action")
                 self.InventoryMenu()
-            printwithdelay(f"Incorrect Usage, Try:{choice} [item]",.5)
+            printwithdelay(f"Incorrect Usage, Try:{choice} [item]")
             self.InventoryMenu()
             command,parameter=choice.lower().split(' ',1)
         else:
@@ -132,7 +134,7 @@ class Player(Entity):
             elif command=="inspect":
                 self.inspectItem(parameter)
             else:
-                printwithdelay(f"{command} is not a valid action",.5)
+                printwithdelay(f"{command} is not a valid action")
                 self.InventoryMenu()
         
     def inspectItem(self,parameter):
@@ -143,48 +145,48 @@ class Player(Entity):
         item,_=checkDict(parameter,self.slots)
         try:
             if item.name == "Nothing":
-                printwithdelay(f"You stare into space for several moments contemplating nothing",.5)
+                printwithdelay(f"You stare into space for several moments contemplating nothing")
                 return
         finally:
             if item is not None:
                 item.printAttributes()
                 return
             else:
-                printwithdelay(f"{parameter} is not a valid item",.5)
+                printwithdelay(f"{parameter} is not a valid item")
                 return
         
     def unequipItem(self,parameter):
         item,slot=checkDict(parameter,self.slots)
         try:
             if item.name == "Nothing":
-                printwithdelay(f"{parameter} is not a valid item.",.5)
+                printwithdelay(f"{parameter} is not a valid item.")
                 return
         finally:
             if item is None:
-                printwithdelay(f"{parameter} is not equipped.",.5)
+                printwithdelay(f"{parameter} is not equipped.")
                 return
             self.items.append(item)
             self.slots[slot]=Items("Nothing","Nothing Equipped")
-            printwithdelay(f"You Unequipped your {item.name}",.3)
+            printwithdelay(f"You Unequipped your {item.name}")
     def equipItem(self,parameter):
         item=checkList(parameter,self.items)
         if item is None:
-            printwithdelay(f"{parameter} is not a valid item",.5)
+            printwithdelay(f"{parameter} is not a valid item")
             return
         if item.slot is None:
-            printwithdelay(f"{parameter} is not equippable.",.5)
+            printwithdelay(f"{parameter} is not equippable.")
             return
         if self.slots[item.slot] !=Items("Nothing","Nothing Equipped"):
             self.items.append(self.slots[item.slot])
         self.slots[item.slot]=item
         self.items.remove(item)
         article=appropriatearticle(item.name)
-        printwithdelay(f"You Equipped {article} {item.name}!",.3)
+        printwithdelay(f"You Equipped {article} {item.name}!")
 
     def pickup(self,item):
         self.items.append(item)
         article=appropriatearticle(item.name)
-        printwithdelay(f"You Picked up {article} {item.name}!",.3)
+        printwithdelay(f"You Picked up {article} {item.name}!")
     def pickupList(self,items):
         for item in items:
             self.pickup(item)
@@ -193,13 +195,11 @@ class Player(Entity):
 class Game:
     player=Player()
     def openingsequence(self):
-        printwithdelay("Welcome to the Ebony Dungeon",.5)
-        printwithdelay("You can make choices to get further into the dungeon, but beware of the danger",.5)
+        printwithdelay("Welcome to the Ebony Dungeon")
+        printwithdelay("You can make choices to get further into the dungeon, but beware of the danger")
         self.__entrance()
     def __entrance(self):
-        printwithdelay("You stand at the entrance to a deep dungeon",.5)
-        self.player.pickupList([Melee("Gold Broadsword",17,f"It may be fancy, but it gets the job done.",1.15,.35),
-                                Melee("DIAMOND BROADSWORD",25,f"It may be super fucking cool, but it deserves to be praised.",2,.05)])
+        printwithdelay("You stand at the entrance to a deep dungeon")
         options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
         self.player.choose(options)
         
@@ -234,7 +234,7 @@ class Encounter:
         monsterBootsName=monsterName+"'s "+random.choice(items["boots"])
         monsterItemTooltip=f"This once belonged to a {monsterName}"
         damage=round(stats["strength"]*11*1.2**player.currentfloor+2*randomoffset)
-        defense=round(stats["vigor"]*1.2**player.currentfloor+2*randomoffset)
+        defense=round(stats["vigor"]*.5*1.2**player.currentfloor+2*randomoffset)
         health=round(stats["vigor"]*50*1.2**player.currentfloor+5*round(randomoffset))
         critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
         critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
@@ -247,7 +247,7 @@ class Encounter:
         return monster
     def beginEncounter(self,currentEncounter):
         currentMonster=self.createMeleeMonster(self.player)
-        printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!",.3)
+        printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!")
         options={"attack":AttackEvent(self.player,currentMonster,currentEncounter),"hit":AttackEvent(self.player,currentMonster,currentEncounter)}
         self.player.choose(options)
     def enemyRetalite(self,monster,currentEncounter):
@@ -259,11 +259,11 @@ class Encounter:
         if critdmg<1:
             critdmg=1
         if rng<=monster.weapon.critchance:
-            printwithdelay(f"The {monster.name} performed a crit on you dealing {critdmg} damage!",.3)
+            printwithdelay(f"The {monster.name} performed a crit on you dealing {critdmg} damage!")
             self.player.takehit(critdmg)
             options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
             self.player.choose(options)
-        printwithdelay(f"The {monster.name} attacked you dealing {dmg} damage!",.3)   
+        printwithdelay(f"The {monster.name} attacked you dealing {dmg} damage!")   
         self.player.takehit(dmg)
         options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
         self.player.choose(options)
@@ -275,10 +275,10 @@ class Encounter:
         reward=random.choice(items)
         self.player.pickup(reward)
     def monsterDeath(self,monster):
-        printwithdelay(f"You have successfully slain the {monster.name}!",.3)
+        printwithdelay(f"You have successfully slain the {monster.name}!")
         self.randomEncounterNumber-=1
         self.monsterItems(monster)
-        printwithdelay("You come to find a door before you.",.3)
+        printwithdelay("You come to find a door before you.")
         options={"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber),"enter":EnterRoom(self.player,self.randomEncounterNumber)}
         self.player.choose(options)
             
@@ -296,7 +296,7 @@ class Event:
 class EntranceEvent(Event):
     def run(self):
         self.player.currentfloor+=1
-        printwithdelay(f"You have entered floor {self.player.currentfloor}",.3)
+        printwithdelay(f"You have entered floor {self.player.currentfloor}")
         self.miniEncounterNumber=self.encounterNumber(self.player)
         self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
         self.currentEncounter.beginEncounter(self.currentEncounter)
@@ -306,7 +306,7 @@ class EnterRoom(Event):
         self.miniEncounterNumber=miniEncouterNumber
     def run(self):
         if self.miniEncounterNumber==0:
-            printwithdelay("Before you is a staircase that decends deeper into the dungeon.",.3)
+            printwithdelay("Before you is a staircase that decends deeper into the dungeon.")
             options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
             self.player.choose(options)
         self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
@@ -326,13 +326,13 @@ class AttackEvent(Event):
         if critdmg<1:
             critdmg=1
         if rng<=self.player.slots["mainhand"].critchance:
-            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage!",.3)
+            printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage!")
             self.monster.takehit(critdmg,self.currentEncounter)
-            printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})",.3)
+            printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})")
             self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
-        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage!",.3)    
+        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage!")    
         self.monster.takehit(dmg,self.currentEncounter)
-        printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})",.3)
+        printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})")
         self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
         
 
