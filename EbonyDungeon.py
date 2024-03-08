@@ -253,12 +253,12 @@ class Encounter:
         if critdmg<1:
             critdmg=1
         if rng<=monster.weapon.critchance:
-            self.player.takehit(critdmg)
             printwithdelay(f"The {monster.name} performed a crit on you dealing {critdmg} damage!",.3)
+            self.player.takehit(critdmg)
             options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
             self.player.choose(options)
+        printwithdelay(f"The {monster.name} attacked you dealing {dmg} damage!",.3)   
         self.player.takehit(dmg)
-        printwithdelay(f"The {monster.name} attacked you dealing {dmg} damage!",.3)
         options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
         self.player.choose(options)
 class Event:
@@ -293,11 +293,11 @@ class AttackEvent(Event):
         if critdmg<1:
             critdmg=1
         if rng<=self.player.slots["mainhand"].critchance:
-            self.monster.takehit(critdmg)
             printwithdelay(f"You preformed a crit on the {self.monster.name} dealing {critdmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)
+            self.monster.takehit(critdmg)
             self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
+        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)    
         self.monster.takehit(dmg)
-        printwithdelay(f"You attacked the {self.monster.name} dealing {dmg} damage! ({self.monster.health}/{self.monster.maxhealth})",.3)
         self.currentEncounter.enemyRetalite(self.monster,self.currentEncounter)
         
 
