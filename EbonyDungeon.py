@@ -93,12 +93,11 @@ class Player(Entity):
         printwithdelay("You have died.")
         quit()
     def choose(self,options):
-        inventorysynonyms=["items","item","inventory"]
         choice=input("Actions >")
-        if choice.lower()=="stats":
+        if choice.lower() in ["stats","health","money","floor"]:
             printwithdelay(f"Health> {self.health}\nMax Health> {self.maxhealth}\nMoney> {self.money}\nCurrent Floor> {self.currentfloor}")
             self.choose(options)
-        elif choice.lower()in inventorysynonyms:
+        elif choice.lower()in ["items","item","inventory"]:
             printwithdelay("Items:")
             for item in self.items:
                 printwithdelay(item.name)
