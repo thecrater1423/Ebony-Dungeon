@@ -90,7 +90,7 @@ class Player(Entity):
         defense=self.slots["helmet"].defense+self.slots["chestplate"].defense+self.slots["pants"].defense+self.slots["boots"].defense
         return defense
     def die(self):
-        printwithdelay
+        printwithdelay("You have died.")
         quit()
     def choose(self,options):
         inventorysynonyms=["items","item","inventory"]
