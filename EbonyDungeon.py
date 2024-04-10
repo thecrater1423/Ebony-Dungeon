@@ -1,6 +1,13 @@
 import random
 import time
 #Functions
+def weightRandDict(dict):
+    rng=random.uniform(0,1)
+    previouschance=0
+    for weight,output in dict:
+        if previouschance<rng<weight+previouschance:
+            return output
+        previouschance=weight+previouschance
 def printwithdelay(text):
     delay=.1
     print(text)
@@ -206,44 +213,10 @@ class Encounter:
     def __init__(self,randomencounternumber,player):
         self.randomEncounterNumber=randomencounternumber
         self.player=player
-    def createMeleeMonster(self,player):
-        attributes={"Strong":{"strength":2,"vigor":1.25,"Intellect":1,"Decisiveness":1},
-                    "Puny":{"strength":.5,"vigor":.75,"Intellect":1,"Decisiveness":1},
-                    "Bulky":{"strength":1,"vigor":1.5,"Intellect":1,"Decisiveness":1},
-                    "Large":{"strength":1,"vigor":2.25,"Intellect":1,"Decisiveness":1},
-                    "Gargantuan":{"strength":1,"vigor":3,"Intellect":1,"Decisiveness":1},
-                    "Skillful":{"strength":1,"vigor":1,"Intellect":1.5,"Decisiveness":2.5},
-                    "Wise":{"strength":1,"vigor":1,"Intellect":2.5,"Decisiveness":1.5},
-                    "Foolish":{"strength":1,"vigor":1,"Intellect":.5,"Decisiveness":.75},
-                    "Gruntish":{"strength":1.5,"vigor":2,"Intellect":.5,"Decisiveness":.5},
-                    "Average":{"strength":1,"vigor":1,"Intellect":1,"Decisiveness":1}}
-        attribute,stats=random.choice(list(attributes.items()))
-        monsters=["Goblin","Zombie","Ninja","Pirate","Henchman"]
-        items={"weapons":["Sword","Scimitar","Waraxe","Shortsword","Longsword"],
-               "helmets":["Greathelm","Helmet","Viking Helmet","Knight Helmet","Visor"],
-               "chestplates":["Breastplate","Chestplate","Vest","Overarmor"],
-               "pants":["Pantaloons","Knight Leggings"],
-               "boots":["Combat Boots","Leather Boots"]}
-        monsterName=attribute+" " +random.choice(monsters)
-        randomoffset=random.uniform(-1,1)
-        monsterWeaponName=monsterName+"'s "+random.choice(items["weapons"])
-        monsterHelmetName=monsterName+"'s "+random.choice(items["helmets"])
-        monsterChestplateName=monsterName+"'s "+random.choice(items["chestplates"])
-        monsterPantsName=monsterName+"'s "+random.choice(items["pants"])
-        monsterBootsName=monsterName+"'s "+random.choice(items["boots"])
-        monsterItemTooltip=f"This once belonged to a {monsterName}"
-        damage=round(stats["strength"]*11*1.2**player.currentfloor+2*randomoffset)
-        defense=round(stats["vigor"]*.5*1.2**player.currentfloor+2*randomoffset)
-        health=round(stats["vigor"]*50*1.2**player.currentfloor+5*round(randomoffset))
-        critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
-        critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
-        monster=Enemy(monsterName,health,
-                      Melee(monsterWeaponName,damage,monsterItemTooltip,critpower,critchance),
-                      Helmet(monsterHelmetName,defense,monsterItemTooltip),
-                      Chestplate(monsterChestplateName,defense,monsterItemTooltip),
-                      Pants(monsterPantsName,defense,monsterItemTooltip),
-                      Boot(monsterBootsName,defense,monsterItemTooltip))
-        return monster
+class ShopEncounter(Encounter):
+    def beginEncounter(self,currentEncounter):
+        print("I gotta code this lmao get fucked")
+class MonsterEncounter(Encounter):
     def beginEncounter(self,currentEncounter):
         currentMonster=self.createMeleeMonster(self.player)
         printwithdelay(f"You stumble into a {currentMonster.name}({currentMonster.health}/{currentMonster.maxhealth})!")
@@ -271,8 +244,7 @@ class Encounter:
         if rng>.5:
             return
         items=[monster.weapon,monster.helmet,monster.chestplate,monster.pants,monster.boots]
-        reward=random.choice(items)
-        self.player.pickup(reward)
+        self.player.pickup(random.choice(items))
     def monsterDeath(self,monster):
         printwithdelay(f"You have successfully slain the {monster.name}!")
         self.randomEncounterNumber-=1
@@ -280,7 +252,45 @@ class Encounter:
         printwithdelay("You come to find a door before you.")
         options={"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber),"enter":EnterRoom(self.player,self.randomEncounterNumber)}
         self.player.choose(options)
-            
+class MeleeEncounter(MonsterEncounter):
+    def createMeleeMonster(self,player):
+        attributes={"Strong":{"strength":2,"vigor":1.25,"Intellect":1,"Decisiveness":1},
+                    "Puny":{"strength":.5,"vigor":.75,"Intellect":1,"Decisiveness":1},
+                    "Bulky":{"strength":1,"vigor":1.5,"Intellect":1,"Decisiveness":1},
+                    "Large":{"strength":1,"vigor":2.25,"Intellect":1,"Decisiveness":1},
+                    "Gargantuan":{"strength":1,"vigor":3,"Intellect":1,"Decisiveness":1},
+                    "Skillful":{"strength":1,"vigor":1,"Intellect":1.5,"Decisiveness":2.5},
+                    "Wise":{"strength":1,"vigor":1,"Intellect":2.5,"Decisiveness":1.5},
+                    "Foolish":{"strength":1,"vigor":1,"Intellect":.5,"Decisiveness":.75},
+                    "Gruntish":{"strength":1.5,"vigor":2,"Intellect":.5,"Decisiveness":.5},
+                    "Average":{"strength":1,"vigor":1,"Intellect":1,"Decisiveness":1}}
+        attribute,stats=random.choice(list(attributes.items()))
+        monsters=["Goblin","Zombie","Ninja","Pirate","Henchman","Zombie Viking","Viking","Marauder","Zombie Pirate","Skeleton","Skeleton Ninja","Skeleton Pirate","Skeleton Viking"]
+        items={"weapons":["Sword","Scimitar","Waraxe","Shortsword","Longsword","Dagger","Spear","Mace","Flail","Club","Bludgeon","Katana","Saber","Lance","Halberd"],
+               "helmets":["Greathelm","Helmet","Viking Helmet","Knight Helmet","Visor"],
+               "chestplates":["Breastplate","Chestplate","Vest","Overarmor","Shirt","Chestpiece","Shining Armor"],
+               "pants":["Pantaloons","Knight Leggings","Greaves"],
+               "boots":["Combat Boots","Leather Boots","Sandels"]}
+        monsterName=attribute+" " +random.choice(monsters)
+        randomoffset=random.uniform(-1,1)
+        monsterWeaponName=monsterName+"'s "+random.choice(items["weapons"])
+        monsterHelmetName=monsterName+"'s "+random.choice(items["helmets"])
+        monsterChestplateName=monsterName+"'s "+random.choice(items["chestplates"])
+        monsterPantsName=monsterName+"'s "+random.choice(items["pants"])
+        monsterBootsName=monsterName+"'s "+random.choice(items["boots"])
+        monsterItemTooltip=f"This once belonged to a {monsterName}"
+        damage=round(stats["strength"]*11*1.2**player.currentfloor+2*randomoffset)
+        defense=round(stats["vigor"]*.5*1.2**player.currentfloor+2*randomoffset)
+        health=round(stats["vigor"]*50*1.2**player.currentfloor+5*round(randomoffset))
+        critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
+        critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
+        monster=Enemy(monsterName,health,
+                      Melee(monsterWeaponName,damage,monsterItemTooltip,critpower,critchance),
+                      Helmet(monsterHelmetName,defense,monsterItemTooltip),
+                      Chestplate(monsterChestplateName,defense,monsterItemTooltip),
+                      Pants(monsterPantsName,defense,monsterItemTooltip),
+                      Boot(monsterBootsName,defense,monsterItemTooltip))
+        return monster
 class Event:
     def __init__(self,player):
         self.player=player
@@ -297,7 +307,7 @@ class EntranceEvent(Event):
         self.player.currentfloor+=1
         printwithdelay(f"You have entered floor {self.player.currentfloor}")
         self.miniEncounterNumber=self.encounterNumber(self.player)
-        self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
+        self.currentEncounter=weightRandDict([(.9,MeleeEncounter(self.miniEncounterNumber,self.player)),(.1,ShopEncounter(self.miniEncounterNumber,self.player))])
         self.currentEncounter.beginEncounter(self.currentEncounter)
 class EnterRoom(Event):
     def __init__(self,player,miniEncouterNumber):
@@ -308,7 +318,7 @@ class EnterRoom(Event):
             printwithdelay("Before you is a staircase that decends deeper into the dungeon.")
             options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
             self.player.choose(options)
-        self.currentEncounter=Encounter(self.miniEncounterNumber,self.player)
+        self.currentEncounter=weightRandDict([(.9,MeleeEncounter(self.miniEncounterNumber,self.player)),(.1,ShopEncounter(self.miniEncounterNumber,self.player))])
         self.currentEncounter.beginEncounter(self.currentEncounter)
         
 class AttackEvent(Event):
