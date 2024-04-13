@@ -87,6 +87,7 @@ class Player(Entity):
     maxhealth=100
     items=[]
     money=0
+    scrap=0
     currentfloor=0
     slots={"mainhand":Melee("Sledgehammer",25,"Quite heavy, but it can pack a punch.",2.5,.07),
            "helmet":Helmet("Hardhat",3,"Unless you are dueling a bunch of falling rocks, this might not do much."),
@@ -101,8 +102,8 @@ class Player(Entity):
         quit()
     def choose(self,options):
         choice=input("Actions >")
-        if choice.lower() in ["stats","health","money","floor"]:
-            printwithdelay(f"Health> {self.health}\nMax Health> {self.maxhealth}\nMoney> {self.money}\nCurrent Floor> {self.currentfloor}")
+        if choice.lower() in ["stats","health","money","floor","scrap"]:
+            printwithdelay(f"Health> {self.health}\nMax Health> {self.maxhealth}\nMoney> {self.money}\nCurrent Floor> {self.currentfloor}\nScrap> {self.scrap}")
             self.choose(options)
         elif choice.lower()in ["items","item","inventory"]:
             printwithdelay("Items:")
@@ -196,6 +197,22 @@ class Player(Entity):
     def pickupList(self,items):
         for item in items:
             self.pickup(item)
+    def pickupMoney(self,amount):
+        amount=int(amount)
+        if amount<=1:
+            printwithdelay(f"You picked up a single coin!")
+            self.money+=1
+            return
+        printwithdelay(f"You picked up {amount} coins!")
+        self.money+=amount
+    def pickupScrap(self,amount):
+        amount=int(amount)
+        if amount<=1:
+            printwithdelay(f"You salvaged a single scrap!")
+            self.scrap+=1
+            return
+        printwithdelay(f"You salvaged {amount} scrap!")
+        self.scrap+=amount
                 
             
 class Game:
@@ -215,7 +232,7 @@ class Encounter:
         self.player=player
 class ShopEncounter(Encounter):
     def beginEncounter(self,currentEncounter):
-        print("I gotta code this lmao get fucked")
+        print("You stumble upon a humble merchant")
 class MonsterEncounter(Encounter):
     def beginEncounter(self,currentEncounter):
         currentMonster=self.createMeleeMonster(self.player)
@@ -239,7 +256,9 @@ class MonsterEncounter(Encounter):
         self.player.takehit(dmg)
         options={"attack":AttackEvent(self.player,monster,currentEncounter),"hit":AttackEvent(self.player,monster,currentEncounter)}
         self.player.choose(options)
-    def monsterItems(self,monster):
+    def monsterLoot(self,monster):
+        self.player.pickupMoney(25*1.03**self.player.floor)
+        self.player.pickupScrap(5*1.02**self.player.floor)
         rng=random.uniform(0,1)
         if rng>.5:
             return
@@ -248,7 +267,7 @@ class MonsterEncounter(Encounter):
     def monsterDeath(self,monster):
         printwithdelay(f"You have successfully slain the {monster.name}!")
         self.randomEncounterNumber-=1
-        self.monsterItems(monster)
+        self.monsterLoot(monster)
         printwithdelay("You come to find a door before you.")
         options={"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber),"enter":EnterRoom(self.player,self.randomEncounterNumber)}
         self.player.choose(options)
