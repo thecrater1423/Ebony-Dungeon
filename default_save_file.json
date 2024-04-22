@@ -1,0 +1,53 @@
+{
+"health": 100,
+"maxhealth": 100,
+"items": [
+],
+"money": 0,
+"scrap": 0,
+"currentfloor": 0,
+"slots": {
+"mainhand": {
+"type": "Melee",
+"data": [
+"Sledgehammer",
+25,
+"Quite heavy, but it can pack a punch.",
+2.5,
+0.07
+]
+},
+"helmet": {
+"type": "Armor",
+"data": [
+"Hardhat",
+3,
+"Unless you are dueling a bunch of falling rocks, this might not do much."
+]
+},
+"chestplate": {
+"type": "Armor",
+"data": [
+"Reflective Vest",
+2,
+"Unless you are battling drunk drivers this may not do much."
+]
+},
+"pants": {
+"type": "Armor",
+"data": [
+"Work Pants",
+2,
+"Unless you are attempting to look the least flattering, this may not do much."
+]
+},
+"boots": {
+"type": "Armor",
+"data": [
+"Nike Kicks",
+1,
+"A lot more stylish than they are protective."
+]
+}
+}
+}

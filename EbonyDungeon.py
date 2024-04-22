@@ -1,6 +1,28 @@
 import random
+import os.path
 import time
+import json
 #Functions
+def playerDataDecompress(file):
+    saveFile=open(file,"r")
+    savedata=json.loads(saveFile.read())
+    saveFile.close()
+    playerdata=(savedata["health"],savedata["maxhealth"],playerItemDataDecompress(savedata["items"]),savedata["money"],savedata["scrap"],savedata["currentfloor"],playerSlotsDataDecompress(savedata["slots"]))
+    return playerdata
+def playerItemDataDecompress(itemData):
+    itemTypes={"Items":Items,"Quantity":Quantity,"Melee":Melee,"Armor":Armor}
+    decompressedItems=[]
+    for item in itemData:
+        decompressedItem=itemTypes[item["type"]](item["data"])
+        decompressedItems.append(decompressedItem)
+    return decompressedItems
+def playerSlotsDataDecompress(slotsData):
+    itemTypes={"Items":Items,"Quantity":Quantity,"Melee":Melee,"Armor":Armor}
+    decompressedSlots={}
+    for key in slotsData:
+        decompressedItem=itemTypes[slotsData[key]["type"]](slotsData[key]["data"])
+        decompressedSlots[key]=decompressedItem
+    return decompressedSlots
 def weightRandDict(dict):
     rng=random.uniform(0,1)
     previouschance=0
@@ -42,14 +64,18 @@ class Entity:
         print("die")
         
 class Items:
-    def __init__(self,name,tooltip):
-        self.tooltip=tooltip
+    def __init__(self,data):
+        name,tooltip=data
         self.name=name
+        self.tooltip=tooltip
     def printAttributes(self):
         printwithdelay("This item has no attributes")
     slot=None
-class Quanty(Items):
-    def __init__(self,name,tooltip,quantity,function,basevalue):
+    def compress(self):
+        return {"type":"Items","data":(self.name,self.tooltip)}
+class Quantity(Items):
+    def __init__(self,data):
+        name,tooltip,quantity,function,basevalue=data
         self.name=name
         self.tooltip=tooltip
         self.quantity=quantity
@@ -57,28 +83,36 @@ class Quanty(Items):
         self.value=basevalue
         self.scrap=basevalue/3
     slot=None
+    def compress(self):
+        return {"type":"Quantity","data":(self.name,self.tooltip,self.quantity,self.function,self.value)}
     def printAttributes(self):
         printwithdelay(f"Quantity> {self.quantity}\nScrap Value (per {self.name})> {self.scrap}\nMoney Value (per {self.name})> {self.value}\n{self.tooltip}")
 class Mainhand(Items):
     slot="mainhand"
 class Melee(Mainhand):
-    def __init__(self,name,damage,tooltip,critpower,critchance):
+    def __init__(self,data):
+        name,damage,tooltip,critpower,critchance=data
         self.damage=damage
         self.name=name
         self.tooltip=tooltip
         self.critpower=critpower
         self.critchance=critchance
-        self.scrap=round(1.25**(damage/2)-1)
-        self.value=round((1.25**(damage/2)-1)*3)
+        self.scrap=round((damage**2)/25)
+        self.value=round(((damage**2)/25)*3)
+    def compress(self):
+        return {"type":"Melee","data":(self.name,self.damage,self.tooltip,self.critpower,self.critchance)}
     def printAttributes(self):
         printwithdelay(f"Mainhand\nDamage> {self.damage}\nCrit Power> {self.critpower}\nCrit Chance> {self.critchance}\nScrap Value> {self.scrap}\nMoney Value> {self.value}\n{self.tooltip}")
 class Armor(Items):
-    def __init__(self,name,defense,tooltip):
+    def __init__(self,data):
+        name,defense,tooltip=data
         self.defense=defense
         self.name=name
         self.tooltip=tooltip
-        self.scrap=round(1.25**(defense))
-        self.value=round(1.25**(defense)*3)
+        self.scrap=round(defense**2/25)
+        self.value=round(((1.25**2)/25)*3)
+    def compress(self):
+        return {"type":"Armor","data":(self.name,self.defense,self.tooltip)}
     def printAttributes(self):
         printwithdelay(f"Defense> {self.defense}\nScrap Value> {self.scrap}\nMoney Value> {self.value}\n{self.tooltip}")
 class Helmet(Armor):
@@ -98,22 +132,35 @@ class Boot(Armor):
         printwithdelay(f"Boots\nDefense> {self.defense}\nScrap Value> {self.scrap}\nMoney Value> {self.value}\n{self.tooltip}")
     slot="boots"
 class Player(Entity):
-    health=100
-    maxhealth=100
-    items=[]
-    money=0
-    scrap=0
-    currentfloor=0
-    slots={"mainhand":Melee("Sledgehammer",25,"Quite heavy, but it can pack a punch.",2.5,.07),
-           "helmet":Helmet("Hardhat",3,"Unless you are dueling a bunch of falling rocks, this might not do much."),
-           "chestplate":Chestplate("Reflective Vest",2,"Unless you are battling drunk drivers this may not do much."),
-           "pants":Pants("Work Pants",2,"Unless you are attempting to look the least flattering, this may not do much."),
-           "boots":Boot("Nike Kicks",1,"A lot more stylish than they are protective.")}
+    def __init__(self,playerdata):
+        health,maxhealth,items,money,scrap,currentfloor,slots=playerdata
+        self.health=health
+        self.maxhealth=maxhealth
+        self.items=items
+        self.money=money
+        self.scrap=scrap
+        self.currentfloor=currentfloor
+        self.slots=slots
+    def itemsCompress(self):
+        newitems=[]
+        for item in self.items:
+            newitems.append(item.compress())
+        return newitems
+    def slotsCompress(self):
+        newslots={}
+        for key in self.slots:
+            newslots[key]=self.slots[key].compress()
+        return newslots
+    def compress(self):
+        return {"health":self.health,"maxhealth":self.maxhealth,"items":self.itemsCompress(),"money":self.money,"scrap":self.scrap,"currentfloor":self.currentfloor,"slots":self.slotsCompress()}
     def defense(self):
         defense=self.slots["helmet"].defense+self.slots["chestplate"].defense+self.slots["pants"].defense+self.slots["boots"].defense
         return defense
     def die(self):
         printwithdelay("You have died.")
+        if os.path.exists("player_save_file.json") is False:
+            quit()
+        os.remove("player_save_file.json")
         quit()
     def choose(self,options,prompt):
         printwithdelay(prompt)
@@ -206,7 +253,7 @@ class Player(Entity):
         printwithdelay(f"You Equipped {article} {item.name}!")
 
     def pickup(self,item):
-        if isinstance(item,Quanty(Items)) is True:
+        if isinstance(item,Quantity) is True:
             self.pickupQuantity(item)
             return
         self.items.append(item)
@@ -243,7 +290,11 @@ class Player(Entity):
                 
             
 class Game:
-    player=Player()
+    def __init__(self):
+        if os.path.isfile("player_save_file.json") is False:
+            self.player=Player(playerDataDecompress("default_save_file.json"))
+            return
+        self.player=Player(playerDataDecompress("player_save_file.json"))
     def openingsequence(self):
         printwithdelay("Welcome to the Ebony Dungeon")
         printwithdelay("You can make choices to get further into the dungeon, but beware of the danger")
@@ -258,6 +309,7 @@ class Encounter:
         self.player=player
 class ShopEncounter(Encounter):
     def beginEncounter(self):
+        self.randomEncounterNumber-=1
         self.player.choose({"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber),"talk":Shop(self.player),"shop":Shop(self.player)},"You stumble upon a humble merchant")
 class MonsterEncounter(Encounter):
     def beginEncounter(self):
@@ -326,11 +378,11 @@ class MeleeEncounter(MonsterEncounter):
         critchance=round(stats["Intellect"]*(1/100)*1.2**player.currentfloor+randomoffset*stats["Intellect"]*(1/400)*1.2**player.currentfloor,2)
         critpower=round(stats["Decisiveness"]*.25*1.2**player.currentfloor+1+.25*abs(randomoffset),2)
         monster=Enemy(monsterName,health,
-                      Melee(monsterWeaponName,damage,monsterItemTooltip,critpower,critchance),
-                      Helmet(monsterHelmetName,defense,monsterItemTooltip),
-                      Chestplate(monsterChestplateName,defense,monsterItemTooltip),
-                      Pants(monsterPantsName,defense,monsterItemTooltip),
-                      Boot(monsterBootsName,defense,monsterItemTooltip))
+                      Melee((monsterWeaponName,damage,monsterItemTooltip,critpower,critchance)),
+                      Helmet((monsterHelmetName,defense,monsterItemTooltip)),
+                      Chestplate((monsterChestplateName,defense,monsterItemTooltip)),
+                      Pants((monsterPantsName,defense,monsterItemTooltip)),
+                      Boot((monsterBootsName,defense,monsterItemTooltip)))
         return monster
 class Event:
     def __init__(self,player):
@@ -359,8 +411,8 @@ class EnterRoom(Event):
         self.miniEncounterNumber=miniEncouterNumber
     def run(self):
         if self.miniEncounterNumber==0:
-            options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)}
-            self.player.choose(options,"Before you is a staircase that decends deeper into the dungeon.")
+            options={"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player),"save":SaveGame(self.player)}
+            self.player.choose(options,"Before you is a staircase that decends deeper into the dungeon. Before you descend, you may save.")
         self.currentEncounter=weightRandDict([(.9,MeleeEncounter(self.miniEncounterNumber,self.player)),(.1,ShopEncounter(self.miniEncounterNumber,self.player))])
         self.currentEncounter.beginEncounter()
         
@@ -386,7 +438,13 @@ class AttackEvent(Event):
         self.monster.takehit(dmg,self.currentEncounter)
         printwithdelay(f"({self.monster.health}/{self.monster.maxhealth})")
         self.currentEncounter.enemyRetalite(self.monster)
-        
+class SaveGame(Event):
+    def run(self):
+        save_file=open("player_save_file.json","w")
+        json.dump(self.player.compress(),save_file,indent=0)
+        save_file.close()
+        printwithdelay("Save Successful!")
+        self.player.choose({"enter":EntranceEvent(self.player),"go":EntranceEvent(self.player),"proceed":EntranceEvent(self.player)},"Before you is a staircase that decends deeper into the dungeon.")
 
 class Enemy(Entity):
     def __init__(self,name,health,weapon,helmet,chestplate,pants,boots):
