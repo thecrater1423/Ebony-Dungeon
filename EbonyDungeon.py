@@ -48,6 +48,17 @@ class Items:
     def printAttributes(self):
         printwithdelay("This item has no attributes")
     slot=None
+class Quanty(Items):
+    def __init__(self,name,tooltip,quantity,function,basevalue):
+        self.name=name
+        self.tooltip=tooltip
+        self.quantity=quantity
+        self.function=function
+        self.value=basevalue
+        self.scrap=basevalue/3
+    slot=None
+    def printAttributes(self):
+        printwithdelay(f"Quantity> {self.quantity}\nScrap Value (per {self.name})> {self.scrap}\nMoney Value (per {self.name})> {self.value}\n{self.tooltip}")
 class Mainhand(Items):
     slot="mainhand"
 class Melee(Mainhand):
@@ -195,12 +206,24 @@ class Player(Entity):
         printwithdelay(f"You Equipped {article} {item.name}!")
 
     def pickup(self,item):
+        if isinstance(item,Quanty(Items)) is True:
+            self.pickupQuantity(item)
+            return
         self.items.append(item)
         article=appropriatearticle(item.name)
         printwithdelay(f"You Picked up {article} {item.name}!")
     def pickupList(self,items):
         for item in items:
             self.pickup(item)
+    def pickupQuantity(self,item):
+        iteminlist=checkList(item.name,self.items)
+        if iteminlist is None:
+            self.items.append(item)
+            printwithdelay(f"You picked up {item.quantity} {item.name}s")
+            return
+        iteminlist.quantity+=item.quantity
+        printwithdelay(f"You picked up {item.quantity} {item.name}s")
+
     def pickupMoney(self,amount):
         amount=int(amount)
         if amount<=1:
@@ -235,7 +258,7 @@ class Encounter:
         self.player=player
 class ShopEncounter(Encounter):
     def beginEncounter(self):
-        self.player.choose({"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber)},"You stumble upon a humble merchant")
+        self.player.choose({"go":EnterRoom(self.player,self.randomEncounterNumber),"proceed":EnterRoom(self.player,self.randomEncounterNumber),"talk":Shop(self.player),"shop":Shop(self.player)},"You stumble upon a humble merchant")
 class MonsterEncounter(Encounter):
     def beginEncounter(self):
         currentMonster=self.createMeleeMonster(self.player)
@@ -320,6 +343,9 @@ class Event:
         return miniEncounterNumber
     def run(self):
         return
+class Shop(Event):
+    def run(self):
+        print("This isn't fully fleshed out get fucked")
 class EntranceEvent(Event):
     def run(self):
         self.player.currentfloor+=1
